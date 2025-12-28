@@ -159,9 +159,24 @@ sounds = {
     'platform_hit': load_sound('platform_hit.wav'),
 }
 if pygame.mixer:
+    try:
+        # ensure mixer is initialized
+        if not pygame.mixer.get_init():
+            pygame.mixer.init()
+    except Exception:
+        pass
     for k, s in sounds.items():
         if s:
             s.set_volume(cfg.get('volume', 0.6))
+    # background music (streamed)
+    music_path = os.path.join(ASSETS_DIR, 'bg.ogg')
+    if os.path.exists(music_path):
+        try:
+            pygame.mixer.music.load(music_path)
+            pygame.mixer.music.set_volume(cfg.get('volume', 0.6))
+            pygame.mixer.music.play(-1)
+        except Exception:
+            pass
 
 font_main = pygame.font.Font(None, 36)
 font_title = pygame.font.Font(None, 72)
@@ -346,6 +361,11 @@ def settings_screen():
         for s in sounds.values():
             if s:
                 s.set_volume(volume)
+        # update background music volume as well
+        try:
+            pygame.mixer.music.set_volume(volume)
+        except Exception:
+            pass
         if selected:
             return selected
         if btn_save.callback and btn_save.hovered and pygame.mouse.get_pressed()[0]:
@@ -557,6 +577,10 @@ def run_app():
                 break
             state = res or 'menu'
 
+    try:
+        pygame.mixer.music.stop()
+    except Exception:
+        pass
     pygame.quit()
 
 if __name__ == '__main__':
